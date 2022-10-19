@@ -1,0 +1,12 @@
+.brain-animation {
+	position: relative;
+	margin: auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	--size: min(500px, 90vw)
+}
+.brain-animation canvas {
+	width: var(--size);
+	height: var(--size);
+}

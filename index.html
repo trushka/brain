@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>brain animation</title>
+	<style type="text/css">
+		body {
+			text-align: center;
+			background: #000;
+			padding: 110vh 0;
+		}
+		.brain-animation canvas{
+			outline: 1px solid #ffe557;
+		}
+	</style>
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://unpkg.com/three@0.145/build/three.module.js",
+				"three/addons/": "https://unpkg.com/three@0.145/examples/jsm/"
+			}
+		}
+	</script>
+	<script type="module" src="brain.js"></script>
+	<link rel="stylesheet" type="text/css" href="brain.css">
+</head>
+<body>
+	<div class="brain-animation">
+		<canvas></canvas>
+	</div>
+</body>
+</html>
