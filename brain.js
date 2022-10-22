@@ -119,10 +119,10 @@ const
 	renderer = new WebGLRenderer( {alpha:true, antialias: true, canvas:canvas } ),
 	camera = new PerspectiveCamera( 25, 1, 10, 20000 ),
 	bMaterial = new MeshStandardMaterial({
-		color: '#a19c0c',//fff838',
+		color: '#e9e220',//a19c0c',//fff838',
 		roughness: .3,
 		metalness: 1,
-		opacity: 0.5,
+		opacity: 0.33,
 		side: 2,
 		transparent: true,
 		premultipliedAlpha: true,
@@ -145,7 +145,8 @@ new GLTFLoader().load('brain.glb', (obj)=>{
 
 camera.position.z=200;
 lights.forEach((light, i)=>light.position.set((i-=1)*12, 7+!i*5, 12));
-renderer.outputEncoding = 3001;
+renderer.outputEncoding = THREE.GammaEncoding//3001;
+renderer.gammaFactor=1.8
 
 requestAnimationFrame(function anim(){
 	requestAnimationFrame(anim);
@@ -159,5 +160,5 @@ requestAnimationFrame(function anim(){
 	renderer.render(scene, camera);
 	brain.rotation.y += .001
 })
-Object.assign(window, {renderer, camera, bGeometry, bMaterial, brain, scene})
+Object.assign(window, {renderer, camera, bGeometry, bMaterial, brain, scene, THREE, lights})
 //console.log(bGeometry)
