@@ -1,5 +1,6 @@
 .brain-animation {
 	position: relative;
+	perspective: calc(var(--size) * 1.53);
 	margin: auto;
 	display: flex;
 	justify-content: center;
@@ -9,4 +10,11 @@
 .brain-animation canvas {
 	width: var(--size);
 	height: var(--size);
+}
+.brain-animation span {
+	position: absolute;
+	transform: translateY(calc( var(--size) * -0.3 ));
+	width: min-content;
+	text-align: center;
+	opacity: 0;
 }

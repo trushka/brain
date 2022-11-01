@@ -1,4 +1,4 @@
-const canvas = document.querySelector('.brain-animation canvas');
+const animEl = document.querySelector('.brain-animation');
 
 import * as THREE from 'three';
 const {
@@ -116,37 +116,55 @@ BufferGeometry.prototype.smooth = function () {
 }
 
 const
-	renderer = new WebGLRenderer( {alpha:true, antialias: true, canvas:canvas } ),
+	PI=Math.PI,
+	renderer = new WebGLRenderer( {alpha:true, antialias: true } ),
+	canvas = renderer.domElement,
 	camera = new PerspectiveCamera( 25, 1, 10, 20000 ),
 	bMaterial = new MeshStandardMaterial({
-		color: '#e9e220',//a19c0c',//fff838',
+		color: '#a19c0c',//fff838',#e9e220',//
 		roughness: .3,
 		metalness: 1,
 		opacity: 0.33,
 		side: 2,
 		transparent: true,
 		premultipliedAlpha: true,
+		onBeforeCompile: sh=>{
+			sh.uniforms.o2={get value(){return bMaterial.o2}};
+			//sh.
+		}
 	}),
+	light = new THREE.PointLight(),
 	lights = [new DirectionalLight(), new DirectionalLight(), new DirectionalLight()],
 	//Mesh(bGeometry, bMaterial),
-	scene = new Scene().add(...lights);//.add(brain, brain.clone());
+	scene = new Scene().add(...lights),//.add(brain, brain.clone());
+	words = animEl.querySelectorAll('span'),//innerText.split(/,\s*/);
+	rotator=new THREE.Euler(0,0,0, 'ZXY');
 
 let size, ratio, brain, bGeometry;
 
+//animEl.innerText='';
+animEl.append(canvas);
 new GLTFLoader().load('brain.glb', (obj)=>{
-		console.log(obj)
 	scene.add(brain = obj.scene)
 	.traverse(el=>{
 		if (!el.isMesh) return;
 		el.material = bMaterial;
 		if (!bGeometry) bGeometry = el.geometry.smooth();
 	})
+
+	//brain.add(light);
+})
+
+words.forEach((el, i)=>{
+	el._tilt=(Math.random()-.5)*PI*.6;
+	el._phase = PI * 2 / words.length * i;
 })
 
 camera.position.z=200;
+light.position.set(8.62, .06, 20.5);
 lights.forEach((light, i)=>light.position.set((i-=1)*12, 7+!i*5, 12));
 renderer.outputEncoding = THREE.GammaEncoding//3001;
-renderer.gammaFactor=1.8
+//renderer.gammaFactor=1.8
 
 requestAnimationFrame(function anim(){
 	requestAnimationFrame(anim);
@@ -154,11 +172,22 @@ requestAnimationFrame(function anim(){
 	const box = canvas.getBoundingClientRect();
 	if (box.bottom < 0 || box.top > innerHeight || !brain) return;
 
-	if (size != box.width || ratio != devicePixelRatio)
-	 renderer.setDrawingBufferSize(size=box.width, size, ratio=devicePixelRatio);
+	if (size != box.width || ratio != devicePixelRatio) {
+		renderer.setDrawingBufferSize(size=box.width, size, ratio=devicePixelRatio);
+		//renderer.render(scene, camera)
+	}
 
+	words.forEach((el, i)=>{
+		const 
+			ph = el._phase -= .002,
+			angle=ph-Math.sin(ph)*(1.1-1.2*Math.abs(Math.sin(ph/2))**.5),
+			pos=vec3(0, 0, size*.45).applyEuler(rotator.set(angle, 0, el._tilt));
+		el.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px)`;
+		el.style.zIndex=Math.sign(pos.z);
+		el.style.opacity=Math.cos(ph)*.6+.6
+	})
 	renderer.render(scene, camera);
 	brain.rotation.y += .001
 })
-Object.assign(window, {renderer, camera, bGeometry, bMaterial, brain, scene, THREE, lights})
+Object.assign(window, {renderer, camera, bGeometry, bMaterial, brain, scene, THREE, lights, animEl, words, vec3})
 //console.log(bGeometry)
