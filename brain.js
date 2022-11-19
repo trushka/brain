@@ -115,8 +115,13 @@ BufferGeometry.prototype.smooth = function () {
 	return this;
 }
 
+function rnd(min=0, max=1) {
+	if (min>max) [min, max] = [max, min];
+	return min + Math.random() * (max-min)
+}
+
 const
-	PI=Math.PI,
+	PI=Math.PI, PIx2= PI*2,
 	renderer = new WebGLRenderer( {alpha:true, antialias: true } ),
 	canvas = renderer.domElement,
 	camera = new PerspectiveCamera( 25, 1, 10, 20000 ),
@@ -137,10 +142,10 @@ const
 	lights = [new DirectionalLight(), new DirectionalLight(), new DirectionalLight()],
 	//Mesh(bGeometry, bMaterial),
 	scene = new Scene().add(...lights),//.add(brain, brain.clone());
-	words = animEl.querySelectorAll('span'),//innerText.split(/,\s*/);
-	rotator=new THREE.Euler(0,0,0, 'ZXY');
+	words = animEl.dataset.words.replace(/^\s+|,*\s+$/g, '').split(/,\s*/), $words=[],
+	rotator=new THREE.Euler(0,0,0);
 
-let size, ratio, brain, bGeometry;
+let size, ratio, brain, bGeometry, t0=0;
 
 //animEl.innerText='';
 animEl.append(canvas);
@@ -156,9 +161,43 @@ new GLTFLoader().load('brain.glb', (obj)=>{
 })
 
 words.forEach((el, i)=>{
-	el._tilt=(Math.random()-.5)*PI*.6;
-	el._phase = PI * 2 / words.length * i;
+
+	const n = words.length * 2;
+	let j, k;
+	
+	do j = Math.floor(Math.random() * n)
+	while ($words[j]);
+	
+	do k = (j + 4 + Math.floor(Math.random() * n)) % n;
+	while ( Math.abs(k-j)<4 || $words[k] );
+
+	$words[j] = document.createElement('span');
+	$words[k] = document.createElement('span');
+
+	$words[j].innerText = $words[k].innerText = el;
+
 })
+
+Vector3.prototype.rotate=function(...args){
+	return this.applyEuler(rotator.set(...args))
+}
+
+function setEl(el, i){
+	var rz=(Math.smoothstep(rnd(), 0,1)-.5)*.3*PI,
+		rx = rnd(0, PIx2) * !!(i%3);
+
+	rz*=1-Math.abs(Math.sin(rx)*.2);
+
+	el._rot=new THREE.Euler(rx, 0, rz).reorder('YZX');
+
+	if ('_i' in el) return;
+
+	el._i=i;
+	el._phase = (PIx2 / $words.length + PIx2) * i;
+	animEl.append(el);
+}
+$words.forEach(setEl)
+console.log($words.map(e=>e.innerText)) 
 
 camera.position.z=200;
 light.position.set(8.62, .06, 20.5);
@@ -166,7 +205,7 @@ lights.forEach((light, i)=>light.position.set((i-=1)*12, 7+!i*5, 12));
 renderer.outputEncoding = THREE.GammaEncoding//3001;
 //renderer.gammaFactor=1.8
 
-requestAnimationFrame(function anim(){
+requestAnimationFrame(function anim(t){
 	requestAnimationFrame(anim);
 
 	const box = canvas.getBoundingClientRect();
@@ -174,20 +213,32 @@ requestAnimationFrame(function anim(){
 
 	if (size != box.width || ratio != devicePixelRatio) {
 		renderer.setDrawingBufferSize(size=box.width, size, ratio=devicePixelRatio);
-		//renderer.render(scene, camera)
+		brain.rotation.y = PI/2;
+		renderer.render(scene, camera)
 	}
 
-	words.forEach((el, i)=>{
+	const dt = Math.min((t - t0) / (1000/60), 3),
+		start=.5, l=size*.45;
+	t0 = t;
+
+	$words.forEach((el, i)=>{
 		const 
-			ph = el._phase -= .002,
-			angle=ph-Math.sin(ph)*(1.1-1.2*Math.abs(Math.sin(ph/2))**.5),
-			pos=vec3(0, 0, size*.45).applyEuler(rotator.set(angle, 0, el._tilt));
+			ph0=el._phase,
+			ph1 = el._phase += .002*dt,
+			ph =  ph1 % (PI*6) - PI,
+			pos=vec3(0, 0, l);
+
+		if (ph0%PIx2 > ph1%PIx2) setEl(el, ++el._i);
+
+		el._rot._x = -Math.lerp(0, ph, Math.smootherstep(Math.abs(ph), 0, 2)**.2);
+		pos.applyEuler(el._rot);
+
 		el.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px)`;
 		el.style.zIndex=Math.sign(pos.z);
 		el.style.opacity=Math.cos(ph)*.6+.6
 	})
 	renderer.render(scene, camera);
-	brain.rotation.y += .001
+	brain.rotation.y += .001*dt
 })
-Object.assign(window, {renderer, camera, bGeometry, bMaterial, brain, scene, THREE, lights, animEl, words, vec3})
+Object.assign(window, {renderer, camera, bGeometry, bMaterial, brain, scene, THREE, lights, animEl, $words, vec3, rnd})
 //console.log(bGeometry)
