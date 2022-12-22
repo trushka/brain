@@ -5,7 +5,9 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	--size: min(500px, 90vw)
+	--size:
+	min(500px, 90vw);
+	font-size: calc(.056 * var(--size));
 }
 .brain-animation canvas {
 	width: var(--size);
@@ -17,4 +19,12 @@
 	width: min-content;
 	text-align: center;
 	opacity: 0;
+	/* filter: drop-shadow(0 0 0 #fff0) drop-shadow(0 0 4px #fffc) drop-shadow(0 0 5px #000); */
+	transition: filter 2.5s;
+	will-change: transform;
+	text-shadow: 0 0 0.5em #fff, 0 0 0.3em #fff8, 0 0 0.5em #000b, 0 0 0.3em #000b;
+}
+.brain-animation span.highlighted {
+	filter: drop-shadow(0 0 .1em #fff6) drop-shadow(0 0 .2em #fff7) drop-shadow(0 0 .3em #000) drop-shadow(0 0 .4em #000);
+	transition: filter 1.5s cubic-bezier(0.75, 2, 0.6, 1);
 }

@@ -1,6 +1,11 @@
 const animEl = document.querySelector('.brain-animation');
+console.log('module');
 
-import * as THREE from 'three';
+//import * as THREE from 'three';
+import * as THREE from './three.js';
+import { GLTFLoader } from './GLTFLoader.js'; //three/addons/loaders
+ 
+console.log(GLTFLoader, THREE);
 const {
 	Vector2,
 	Vector3,
@@ -26,7 +31,6 @@ const {
 	BufferGeometryLoader,
 	DirectionalLight
 } = THREE;
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 //import BrainJSON from './brain.json.js';
 
 function vec3(...args) {return new Vector3(...args)};
@@ -142,7 +146,8 @@ const
 	lights = [new DirectionalLight(), new DirectionalLight(), new DirectionalLight()],
 	//Mesh(bGeometry, bMaterial),
 	scene = new Scene().add(...lights),//.add(brain, brain.clone());
-	words = animEl.dataset.words.replace(/^\s+|,*\s+$/g, '').split(/,\s*/), $words=[],
+	words = animEl.dataset.words.replace(/^\s+|,*\s+$/g, '').split(/,\s*/),
+	$words=[], count=16,
 	rotator=new THREE.Euler(0,0,0);
 
 let size, ratio, brain, bGeometry, t0=0;
@@ -160,43 +165,44 @@ new GLTFLoader().load('brain.glb', (obj)=>{
 	//brain.add(light);
 })
 
-words.forEach((el, i)=>{
-
-	const n = words.length * 2;
-	let j, k;
-	
-	do j = Math.floor(Math.random() * n)
-	while ($words[j]);
-	
-	do k = (j + 4 + Math.floor(Math.random() * n)) % n;
-	while ( Math.abs(k-j)<4 || $words[k] );
-
-	$words[j] = document.createElement('span');
-	$words[k] = document.createElement('span');
-
-	$words[j].innerText = $words[k].innerText = el;
-
-})
-
 Vector3.prototype.rotate=function(...args){
 	return this.applyEuler(rotator.set(...args))
 }
 
-function setEl(el, i){
-	var rz=(Math.smoothstep(rnd(), 0,1)-.5)*.3*PI,
-		rx = rnd(0, PIx2) * !!(i%3);
+function setEl(el){
+	var i = el._i,
+		rz=(Math.smootherstep(rnd(), 0, 1)-.5)*.4*PI,
+		isActive = el._active = !(i%3-1), word,
+		rx = rnd(0, PIx2) * !isActive,
+		index=Math.floor(rnd(0, 4));
 
-	rz*=1-Math.abs(Math.sin(rx)*.2);
+	//rz*=1-Math.abs(Math.sin(rx)*.2);
 
 	el._rot=new THREE.Euler(rx, 0, rz).reorder('YZX');
 
-	if ('_i' in el) return;
+	el._phase = -PI;
+
+	word=words.splice(index, 1)[0];
+	el.innerText=word;
+	if (isActive) words.push(word)
+	else words.splice(-1, 0, word)
+}
+
+words.sort(a=>rnd(-1, 1));
+
+for (let i=0; i<count; i++) {
+
+	const el = $words[i] = document.createElement('span');
 
 	el._i=i;
-	el._phase = (PIx2 / $words.length + PIx2) * i;
+
+	setEl(el);
+
+	el._phase = PI - PIx2 / count * i;
+
 	animEl.append(el);
 }
-$words.forEach(setEl)
+
 console.log($words.map(e=>e.innerText)) 
 
 camera.position.z=200;
@@ -209,7 +215,7 @@ requestAnimationFrame(function anim(t){
 	requestAnimationFrame(anim);
 
 	const box = canvas.getBoundingClientRect();
-	if (box.bottom < 0 || box.top > innerHeight || !brain) return;
+	if (box.bottom < 0 || box.top > innerHeight || !brain || window.stoped ) return;
 
 	if (size != box.width || ratio != devicePixelRatio) {
 		renderer.setDrawingBufferSize(size=box.width, size, ratio=devicePixelRatio);
@@ -223,19 +229,25 @@ requestAnimationFrame(function anim(t){
 
 	$words.forEach((el, i)=>{
 		const 
-			ph0=el._phase,
-			ph1 = el._phase += .002*dt,
-			ph =  ph1 % (PI*6) - PI,
+			ph=el._phase += .0012*dt,
+			abs= Math.max(Math.abs(ph)-.07, 0),
 			pos=vec3(0, 0, l);
 
-		if (ph0%PIx2 > ph1%PIx2) setEl(el, ++el._i);
+		if (ph > PI) setEl(el, el._i+=count);
 
-		el._rot._x = -Math.lerp(0, ph, Math.smootherstep(Math.abs(ph), 0, 2)**.2);
+		el._rot._x = -ph;
 		pos.applyEuler(el._rot);
 
-		el.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px)`;
+		if (el._active) {
+			pos.lerp(vec3(0, 0, l*1.6), 5**-(abs**1.9*5));
+			if (ph>-.19) el.classList.add('highlighted');
+			if (ph>.13) el.classList.remove('highlighted');
+		}
+
+		el.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(.5)`;
 		el.style.zIndex=Math.sign(pos.z);
-		el.style.opacity=Math.cos(ph)*.6+.6
+		el.style.opacity=Math.cos(ph)*.6+.6;
+
 	})
 	renderer.render(scene, camera);
 	brain.rotation.y += .001*dt

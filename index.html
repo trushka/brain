@@ -4,34 +4,45 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>brain animation</title>
-	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Mulish:wght@300&display=swap">
+	<script type="text/javascript">
+		onkeydown=e=>{
+		    if (event.key===' ') {
+		        stoped=!window.stoped;
+		        return false
+		    }
+		}
+	</script>
 	<style type="text/css">
+			@font-face {
+				font-family: 'gilroy';
+				src: url('8664Gilroy.woff2') format('woff2');
+				font-weight: 400; font-style: normal; font-display: auto;
+			}
 		body {
-			/* text-align: center; */
 			background: #000;
 			padding: 110vh 0;
-			font-family: 'Mulish', sans-serif;
+			font-family: sans-serif;
+			font-family: 'gilroy';
 			color: #fff;
 			font-size: clamp(12px,1.5vw,15px);
-			font-weight: 600;
 			text-transform: uppercase;
 		}
 		.brain-animation canvas{
 			/* outline: 1px solid #ffe557; */
 		}
 	</style>
-	<script type="importmap">
+	<!-- <script type="importmap">
 		{
 			"imports": {
-				"three": "https://unpkg.com/three@0.135/build/three.module.js",
+				"three": "./three.module.js", //https://unpkg.com/three@0.135/build/three.module.js",
 				"three/addons/": "https://unpkg.com/three@0.135/examples/jsm/"
 			}
 		}
-	</script>
+	</script> -->
 	<script type="module" src="brain.js"></script>
 	<link rel="stylesheet" type="text/css" href="brain.css">
 </head>
-<body>
+<body onload="console.log('loaded')">
 	<div class="brain-animation" data-words="
 		Мысль,
 		Память,
@@ -42,5 +53,6 @@
 		Установка,
 		Возбуждение" >
 	</div>
+	<script type="text/javascript">console.log('end')</script>
 </body>
 </html>
