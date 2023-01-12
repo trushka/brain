@@ -171,10 +171,10 @@ Vector3.prototype.rotate=function(...args){
 
 function setEl(el){
 	var i = el._i,
-		rz=(Math.smootherstep(rnd(), 0, 1)-.5)*.4*PI,
+		rz=(Math.smootherstep(rnd(), 0, 1)-.5)*.43*PI,
 		isActive = el._active = !(i%3-1), word,
 		rx = rnd(0, PIx2) * !isActive,
-		index=Math.floor(rnd(0, 4));
+		index=Math.floor(rnd(0, 3));
 
 	//rz*=1-Math.abs(Math.sin(rx)*.2);
 
@@ -229,7 +229,7 @@ requestAnimationFrame(function anim(t){
 
 	$words.forEach((el, i)=>{
 		const 
-			ph=el._phase += .0012*dt,
+			ph=el._phase += .0015*dt,
 			abs= Math.max(Math.abs(ph)-.07, 0),
 			pos=vec3(0, 0, l);
 
@@ -240,7 +240,7 @@ requestAnimationFrame(function anim(t){
 
 		if (el._active) {
 			pos.lerp(vec3(0, 0, l*1.6), 5**-(abs**1.9*5));
-			if (ph>-.19) el.classList.add('highlighted');
+			if (ph>-.22) el.classList.add('highlighted');
 			if (ph>.13) el.classList.remove('highlighted');
 		}
 
